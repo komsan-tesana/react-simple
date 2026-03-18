@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { createProduct } from "../../data/products";
+import { createProduct } from "../../shared/data/products";
 import { useNavigate } from "react-router-dom";
 
-export default function AddProduct() {
+export function AddProduct() {
   const navigate = useNavigate();
-  const [previewImg, setPreviewImg] = useState("");
+  const [previewImg, setPreviewImg] = useState(null);
   // https://gratisography.com/wp-content/uploads/2024/11/gratisography-leg-warmers-1170x780.jpg
 
   //can use lib
@@ -38,11 +38,11 @@ export default function AddProduct() {
 
         <div className="product-detail">
           <div className="product-detail-image-preview">
-             <img src={previewImg} />
+             <img src={previewImg || null} />
           </div>
 
           <div className="product-add-form">
-            <label id="img" img="img" for="img">
+            <label id="img" img="img" htmlFor="img">
               Img Link :
             </label>
             <input
@@ -51,17 +51,17 @@ export default function AddProduct() {
               name="img"
             />
             
-            <label id="name" name="name" for="name">
+            <label id="name" name="name" htmlFor="name">
               Name :
             </label>
             <input type="text" name="name" />
 
-            <label id="price" price="price" for="price">
+            <label id="price" price="price" htmlFor="price">
               Price :
             </label>
             <input type="number" min={0} name="price" />
 
-            <label id="description" description="description" for="description">
+            <label id="description" description="description" htmlFor="description">
               Description :
             </label>
             <textarea type="text" name="description" />

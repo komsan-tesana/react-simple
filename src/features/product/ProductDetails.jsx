@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getProductById } from "../../data/products";
-import { useCart } from "../../context/CartContext";
+import { getProductById } from "../../shared/data/products";
+import { useCart } from "../../app/providers/CartContext";
 
-export default function ProductDetails() {
+export function ProductDetails() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ export default function ProductDetails() {
       <div className="container">
         <div className="product-detail">
           <div className="product-detail-image">
-            <img src={product.image} alt={product.name} />
+            <img src={product.image || null} alt={product.name} />
           </div>
           <div className="product-detail-content">
             <h1 className="product-detail-name">{product.name}</h1>
