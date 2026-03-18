@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../app/providers/AuthContext";
 import { useNavigate,useLocation } from "react-router-dom";
 
-export default function Auth() {
+export function Auth() {
   const location = useLocation();
   const state = location.state; 
   const [mode, setMode] = useState(state.mode || "signup");

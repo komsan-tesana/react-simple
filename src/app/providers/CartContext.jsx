@@ -1,9 +1,9 @@
 import { createContext, useState, useContext } from "react";
-import { getProductById } from "../data/products";
+import { getProductById } from "../../shared/data/products";
 
 const CartContext = createContext(null);
 
-export default function CartProvider({ children }) {
+export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]); // {id: 2, quantity: 7}
 
   function addToCart(productId) {
@@ -77,6 +77,8 @@ export default function CartProvider({ children }) {
 
 export function useCart() {
   const context = useContext(CartContext);
-
+if (!context) {
+		throw new Error("useCart must be used within an CartProvider")
+	}
   return context;
 }

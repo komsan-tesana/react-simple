@@ -1,8 +1,18 @@
-import ProductCard from "../components/ProductCard";
-import { getProducts } from "../data/products";
+import { useEffect, useState } from "react";
+import ProductCard from "../../shared/components/ProductCard";
+import { getProducts } from "../../shared/data/products";
+import { getCats } from "../../shared/services/cat.service";
 
-export default function Home() {
+export function Home() {
   const products = getProducts();
+  const [cats,setCats] = useState([]);
+  useEffect(()=>{
+    getCats().then((res)=>setCats(res))
+  },[])
+  
+  console.error("🚀 ~ Home ~ cats:", cats)
+  
+
   return (
     <div className="page">
       <div className="home-hero">

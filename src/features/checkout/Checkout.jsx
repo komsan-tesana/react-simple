@@ -1,6 +1,6 @@
-import { useCart } from "../context/CartContext";
+import { useCart } from "../../app/providers/CartContext";
 
-export default function Checkout() {
+export function Checkout() {
   const {
     getCartItemsWithProducts,
     updateQuantity,

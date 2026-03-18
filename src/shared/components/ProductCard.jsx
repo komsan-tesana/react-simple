@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useCart } from "../context/CartContext";
+import { useCart } from "../../app/providers/CartContext";
 
 export default function ProductCard({ product }) {
   const { addToCart, cartItems } = useCart();
@@ -11,7 +11,7 @@ export default function ProductCard({ product }) {
   return (
     <div className="product-card">
       <img
-        src={product.image}
+        src={product.image || null}
         alt={product.name}
         className="product-card-image"
       />

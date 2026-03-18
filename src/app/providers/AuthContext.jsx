@@ -2,7 +2,7 @@ import { createContext, useState, useContext } from "react";
 
 const AuthContext = createContext(null);
 
-export default function AuthProvider({ children }) {
+export function AuthProvider({ children }) {
   const currentUser = getCurrentEmail()
   const [user, setUser] = useState(
     currentUser
