@@ -1,2 +1,2 @@
 # react-simple
-Social Enterprise Management Web Application(Cats)
+Social Enterprise Management Web Application
