@@ -7,9 +7,12 @@ export function Checkout() {
     removeFromCart,
     getCartTotal,
     clearCart,
+    cartItems:cartItems2
   } = useCart();
   const cartItems = getCartItemsWithProducts();
 
+  console.error('cartItems2',cartItems2);
+  
   const total = getCartTotal();
 
   function placeOrder() {
