@@ -18,8 +18,8 @@ export const getCats = (tags,limit,signal) => {
 };
 
 
-export const getCatsHero = () => {
-  return fetch(`https://cataas.com/api/cats?limit=${4}&skip=${randomHeroSkip}&tags=gif`, { method: "GET" })
+export const getCatsHero = ({signal}) => {
+  return fetch(`https://cataas.com/api/cats?limit=${4}&skip=${randomHeroSkip}&tags=gif`, { method: "GET" },signal)
     .then((res) => {
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -27,7 +27,7 @@ export const getCatsHero = () => {
       return res.json();
     }).then(async (res)=>{
        const detailCats = await Promise.all(
-            res.map((i) => getCatDetail(i.id))
+            res.map((i) => getCatDetail(i.id,signal))
         );      
       return detailCats
     });

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { AuthContext } from "./auth-context";
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 
 export function AuthProvider({ children }) {
   const currentUser = getCurrentEmail();
   const [user, setUser] = useState(currentUser ? { email: currentUser } : null);
-  const [admin, setAdmin] = useState((currentUser || false) && currentUser === "admin@a");
+  const [admin, setAdmin] = useState(currentUser === ADMIN_EMAIL);
 
   function signUp(email, password) {
     const users = JSON.parse(localStorage.getItem("users") || "[]");
@@ -45,7 +46,7 @@ export function AuthProvider({ children }) {
   }
 
   function isAdmin(current) {
-    const userIsAdmin = current && current === "admin@a";
+    const userIsAdmin = current && current === ADMIN_EMAIL;
     setAdmin(userIsAdmin);
   }
 

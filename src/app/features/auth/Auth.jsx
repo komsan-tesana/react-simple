@@ -82,7 +82,7 @@ export function Auth() {
               )}
             </div>
 
-              <div className="flex justify-center">
+            <div className="flex justify-center">
                 <Button htmlType="submit" size="large" variant="solid" color="blue">
                   {mode === "signup" ? "Sign Up" : "Login"}
                 </Button>

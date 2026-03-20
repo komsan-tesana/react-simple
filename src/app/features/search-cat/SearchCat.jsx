@@ -55,10 +55,7 @@ export function SearchCat() {
     error,
   } = useQuery({
     queryKey: ["cats" ,searchParams],
-    queryFn: ({ signal }) => {     
-      const res = getCats(selectedTags, limit, signal);
-      return res
-    },
+    queryFn: ({ signal }) => getCats(searchParams.selectedTags, searchParams.limit, signal),
     staleTime: 1000 * 60, // 1 min
     cacheTime: 1000 * 60 * 5, 
     keepPreviousData: true,    
@@ -83,7 +80,6 @@ export function SearchCat() {
     getTags().then((tags) => setTags(tags));
   }, []);
 
-  // console.log("isLoading", isLoading);
   console.log("cats", cats);
 
   return (
@@ -110,9 +106,7 @@ export function SearchCat() {
               { label: "10", value: 10 },
               { label: "30", value: 30 },
               { label: "50", value: 50 },
-              { label: "100", value: 100 },
-              // { label: "500", value: 500 },
-              // { label: "1000", value: 1000 },
+              { label: "100", value: 100 }
             ]}
             handleChange={setLimit}
           />

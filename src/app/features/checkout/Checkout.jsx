@@ -11,7 +11,7 @@ export function Checkout() {
   } = useCart();
   const cartItems = getCartItemsWithProducts();
 
-  console.error('cartItems2',cartItems2);
+  console.log('cartItems2',cartItems2);
   
   const total = getCartTotal();
 

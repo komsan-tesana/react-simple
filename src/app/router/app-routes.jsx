@@ -5,7 +5,7 @@ import {
   Checkout,
   ProductDetails,
   SearchCat
-} from "../features";
+} from "@/app/features";
 import { useAuth } from "@/app/providers/auth";
 
 
@@ -23,7 +23,7 @@ function ProtectedRoute({ children, requiredRole }) {
 
 
 function ChildrenLayout() {
-  return (<><Outlet/></>)
+  return (<Outlet/>)
 }
 
 export function AppRoutes() {
@@ -32,12 +32,11 @@ export function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/search" element={<SearchCat />} />
-      {/* <Route path="/virtualAdopt" element={<Home />} />
-      <Route path="/successStories" element={<Home />} /> */}
+      <Route path="/virtualAdopt" element={<Home />} />
+      <Route path="/successStories" element={<Home />} />
 
       {/* Admin Nested */}
-      <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><ChildrenLayout /></ProtectedRoute>}>
-        {/* <Route path="add-products" element={<AddProduct />} /> */}
+      <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><ChildrenLayout /></ProtectedRoute>}>      
         <Route path="checkout" element={<Checkout />} />
       </Route>
 

@@ -1,9 +1,9 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { getCatSay } from "../../shared/services/cat-service";
+import { getCatSay } from "@/app/shared/services/cat-service";
 import { useQuery } from "@tanstack/react-query";
 import { Spin, Radio, Button, message } from "antd";
-import { ProgressDonate } from "../../shared/components/ProgressDonate";
-import { useCart, useAuth } from "../../providers";
+import { ProgressDonate } from "@/app/shared/components/ProgressDonate";
+import { useCart, useAuth } from "@/app/providers";
 import { useState } from "react";
 
 export function ProductDetails() {

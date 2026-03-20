@@ -39,7 +39,7 @@ export function Home() {
     isFetching    
   } = useQuery({
     queryKey: ["catsHero"],
-    queryFn: () => getCatsHero(),
+    queryFn: ({signal}) => getCatsHero(signal),
     staleTime: 1000 * 120, // 2 min
     cacheTime: 1000 * 60 * 5, 
     keepPreviousData: true,
