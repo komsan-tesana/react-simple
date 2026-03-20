@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useAuth } from "../../app/providers/AuthContext";
+import { useAuth } from "@/app/providers/auth";
+import { Button } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export function Auth() {
@@ -81,26 +82,36 @@ export function Auth() {
               )}
             </div>
 
-            <button type="submit" className="btn btn-primary btn-large">
-              {mode === "signup" ? "Sign Up" : "Login"}
-            </button>
+              <div className="flex justify-center">
+                <Button htmlType="submit" size="large" variant="solid" color="blue">
+                  {mode === "signup" ? "Sign Up" : "Login"}
+                </Button>
+            </div>
           </form>
 
           <div className="auth-switch">
             {mode === "signup" ? (
               <p>
-                Already have an account?{" "}
-                <span className="auth-link" onClick={() => setMode("login")}>
+                Already have an account?
+                <Button
+                  variant="link"
+                  color="blue"
+                  onClick={() => setMode("login")}
+                >
                   Login
-                </span>
+                </Button>
               </p>
             ) : (
               <p>
                 {" "}
-                Don't have an account?{" "}
-                <span className="auth-link" onClick={() => setMode("signup")}>
+                Don't have an account?
+                <Button
+                  variant="link"
+                  color="blue"
+                  onClick={() => setMode("signup")}
+                >
                   Sign Up
-                </span>
+                </Button>
               </p>
             )}
           </div>

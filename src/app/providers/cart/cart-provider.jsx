@@ -1,9 +1,8 @@
-import { createContext, useState, useContext } from "react";
-import { getProductById } from "../../shared/data/products";
-import { useAuth } from "../../app/providers/AuthContext";
-import { uniq } from "lodash";
+import { useState } from "react";
+import { CartContext } from "./cart-context";
+import { useAuth } from "@/app/providers/auth";
 import { message } from "antd";
-const CartContext = createContext(null);
+import { uniq } from "lodash";
 
 export function CartProvider({ children }) {
   const { getCurrentEmail } = useAuth();
@@ -51,27 +50,27 @@ export function CartProvider({ children }) {
     }
   }
 
-  function getCartItemsWithProducts() {
-    return cartItems
-      .map((item) => ({
-        ...item,
-        product: getProductById(item.id),
-      }))
-      .filter((item) => item.product);
-  }
+  // function getCartItemsWithProducts() {
+  //   return cartItems
+  //     .map((item) => ({
+  //       ...item,
+  //       product: getProductById(item.id),
+  //     }))
+  //     .filter((item) => item.product);
+  // }
 
   function removeFromCart(productId) {
     setCartItems(cartItems.filter((item) => item.id !== productId));
   }
 
 
-  function getCartTotal() {
-    const total = cartItems.reduce((total, item) => {
-      const product = getProductById(item.id);
-      return total + (product ? product.price * item.quantity : 0);
-    }, 0);
-    return total;
-  }
+  // function getCartTotal() {
+  //   const total = cartItems.reduce((total, item) => {
+  //     const product = getProductById(item.id);
+  //     return total + (product ? product.price * item.quantity : 0);
+  //   }, 0);
+  //   return total;
+  // }
 
   function clearCart() {
     setCartItems([]);
@@ -85,10 +84,8 @@ export function CartProvider({ children }) {
     <CartContext.Provider
       value={{
         cartItems,
-        addToCart,
-        getCartItemsWithProducts,
+        addToCart,        
         removeFromCart,        
-        getCartTotal,
         clearCart,
         productInCart,
       }}
@@ -96,12 +93,4 @@ export function CartProvider({ children }) {
       {children}
     </CartContext.Provider>
   );
-}
-
-export function useCart() {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error("useCart must be used within an CartProvider");
-  }
-  return context;
 }

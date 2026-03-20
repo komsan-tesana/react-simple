@@ -1,15 +1,15 @@
 import "./App.css";
-import { AppRoutes } from "./app/router";
-import { AuthProvider, CartProvider } from "./app/providers";
-import Navbar from "./shared/components/Navbar";
+import { AppRoutes } from "@/app/router";
+import { AuthProvider, CartProvider } from "@/app/providers";
+import Navbar from "@/app/shared/components/Navbar";
 import { Layout, theme } from "antd";
-import logo from "../src/assets/images/paw.png";
+import logo from "@/assets/images/paw.png";
 import { Link } from "react-router-dom";
 const { Header, Content, Footer } = Layout;
 
 function App() {
   const {
-    token: { colorBgContainer, borderRadiusLG },
+    token: { colorBgContainer, borderRadiusLG},    
   } = theme.useToken();
 
   return (
@@ -34,7 +34,7 @@ function App() {
                     height={50}
                     src={logo}
                     alt="logo"
-                    className=" hover:-translate-y-1 duration-300"
+                    className="hover:rotate-20 duration-300"
                   />
                 </Link>
               </div>

@@ -1,4 +1,4 @@
-import { useCart } from "../../app/providers/CartContext";
+import { useCart } from "@/app/providers/cart";
 
 export function Checkout() {
   const {

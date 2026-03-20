@@ -1,7 +1,6 @@
-import { Link } from "react-router-dom";
-import { useAuth } from "../../app/providers/AuthContext";
-import { menuItems } from "../../app/router/menu";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/app/providers/auth";
+import { menuItems } from "../../router/menu-config";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, Button } from "antd";
 
 export default function Navbar() {
@@ -9,10 +8,20 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const items = menuItems
-    .filter((m) => (m?.show ?? false) || (m?.admin || undefined) == admin)
+    .filter((m) =>
+      admin
+        ? (m?.show ?? false) == true || (m?.admin || undefined) == admin
+        : (m?.show ?? false) == true && !m?.admin,
+    )
     .map((menu) => ({
       key: menu.key,
       label: menu.label,
+      children: menu.children
+        ?.filter((c) => !!c?.show)
+        .map((c) => ({
+          ...c,
+          show: undefined,
+        })),
       onClick: (x) => navigate(x.key),
     }));
 
@@ -21,7 +30,7 @@ export default function Navbar() {
       <Menu
         theme="dark"
         mode="horizontal"
-        selectedKeys={location.pathname}
+        selectedKeys={[location.pathname]}
         items={items}
         style={{ flex: 1, minWidth: 0 }}
       />
