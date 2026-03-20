@@ -55,7 +55,7 @@ export function SearchCat() {
     error,
   } = useQuery({
     queryKey: ["cats" ,searchParams],
-    queryFn: ({ signal }) => getCats(searchParams.selectedTags, searchParams.limit, signal),
+    queryFn: ({ signal }) => getCats(searchParams.tags, searchParams.limit, signal),
     staleTime: 1000 * 60, // 1 min
     cacheTime: 1000 * 60 * 5, 
     keepPreviousData: true,    
