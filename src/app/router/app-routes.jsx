@@ -14,7 +14,7 @@ function ProtectedRoute({ children, requiredRole }) {
 
   if (!user) return <Navigate to="/auth" state={{mode : 'login'}} replace/>;
 
-  if (requiredRole == 'admin' && !admin) {
+  if (requiredRole === 'admin' && !admin) {
     return <Navigate to="/" replace/>;
   }
 
