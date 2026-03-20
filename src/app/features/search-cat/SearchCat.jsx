@@ -1,28 +1,13 @@
 import { useEffect, useState } from "react";
-import {
-  getCats,
-  getTags,
-  getCatsHero,
-} from "../../shared/services/cat.service";
-import { CsSelect } from "../../shared/components/CsSelect";
-import { ProgressDonate } from "../../shared/components/ProgressDonate";
-import { CsCard } from "../../shared/components/CsCard";
-import { Card, Spin, Button, Carousel } from "antd";
+import { getCats, getTags } from "@/app/shared/services/cat-service";
+import { CsSelect } from "@/app/shared/components/Select";
+import { CsCard } from "@/app/shared/components/Card";
+import { ProgressDonate } from "@/app/shared/components/ProgressDonate";
+import { Card, Spin, Button, Empty } from "antd";
 import { useQuery } from "@tanstack/react-query";
-import { catsStore } from "../../app/store/cats.store";
+import { catsStore } from "@/app/store/cats-store";
 import { useNavigate } from "react-router-dom";
-
 const { Meta } = Card;
-
-const contentStyle = {
-  margin: 0,
-  width: "1200px",
-  height: "500px",
-  color: "#fff",
-  lineHeight: "500px",
-  textAlign: "center",
-  background: "grey",
-};
 
 function ContentCard({ cat }) {
   const navigate = useNavigate();
@@ -51,76 +36,54 @@ function ContentCard({ cat }) {
   );
 }
 
-function ContentCarousel({ cats }) {
-  return (
-    <div>
-      <Carousel fade autoplaySpeed={5000} autoplay>
-        {cats &&
-          cats.map((cat) => (
-            <div>
-              <img
-                style={contentStyle}
-                loading="eager"
-                draggable={false}
-                alt={cat.url || null}
-                src={cat.url || null}
-              />
-            </div>
-          ))}
-      </Carousel>
-    </div>
-  );
-}
-
-export function Home() {
+export function SearchCat() {
   const limit = catsStore((state) => state.limit);
   const setLimit = catsStore((state) => state.setLimit);
   const defaultTags = catsStore((state) => state.defaultTags);
   const setDefaultTags = catsStore((state) => state.setDefaultTags);
   const [tags, setTags] = useState([]);
-  const [catsHero, setCatsHero] = useState([]);
   const [selectedTags, setSelectedTags] = useState(defaultTags);
+  const [searchParams, setSearchParams] = useState({
+      tags: defaultTags,
+      limit: limit,
+  });
 
   const {
     data: cats = [],
     isLoading,
+    isFetching,
     error,
   } = useQuery({
-    queryKey: ["cats", selectedTags, limit],
-    queryFn: ({ signal }) => {
-      return getCats(selectedTags, limit, signal);
-    },
+    queryKey: ["cats" ,searchParams],
+    queryFn: ({ signal }) => getCats(searchParams.selectedTags, searchParams.limit, signal),
+    staleTime: 1000 * 60, // 1 min
+    cacheTime: 1000 * 60 * 5, 
+    keepPreviousData: true,    
   });
 
-  useEffect(() => {
-    getCatsHero().then((res) => setCatsHero(res));
-  }, []);
+  const handleSearch = () => {
+    setSearchParams({
+      tags: [...selectedTags],
+      limit,
+    });
+};
 
   useEffect(() => {
     setLimit(limit);
-  }, [limit]);
+  }, [limit, setLimit]);
 
   useEffect(() => {
     setDefaultTags(selectedTags);
-  }, [selectedTags]);
+  }, [selectedTags, setDefaultTags]);
 
   useEffect(() => {
     getTags().then((tags) => setTags(tags));
   }, []);
 
+  console.log("cats", cats);
+
   return (
     <div className="page">
-      <div className="home-hero">
-        <h1 className="home-title">
-          Welcome to Social Enterprise Management Web Application
-        </h1>
-        <p className="home-subtitle">Discover amazing cats</p>
-      </div>
-
-      <div className="home-carousel">
-        <ContentCarousel cats={catsHero} />
-      </div>
-
       <div className="container">
         <h2 className="page-title">Our Cats</h2>
 
@@ -133,9 +96,7 @@ export function Home() {
             options={tags}
             handleChange={setSelectedTags}
           />
-        </div>
 
-        <div className="flex flex-col">
           <label htmlFor="limit">Limit </label>
           <CsSelect
             width={100}
@@ -145,20 +106,29 @@ export function Home() {
               { label: "10", value: 10 },
               { label: "30", value: 30 },
               { label: "50", value: 50 },
-              { label: "100", value: 100 },
-              { label: "500", value: 500 },
-              { label: "1000", value: 1000 },
+              { label: "100", value: 100 }
             ]}
             handleChange={setLimit}
           />
         </div>
 
+        <div className="flex justify-start mt-2!">
+          <Button
+            variant="solid"
+            color="blue"
+            onClick={() => handleSearch()}
+          >
+            Search
+          </Button>
+        </div>
+
         {error && <p>Error...</p>}
-        {isLoading ? (
-          <div className="flex justify-center">
-            <Spin percent={"auto"} size="large" />
+        {isFetching || isLoading ? (
+          <div className="flex justify-center mt-2!">
+            <Spin percent={"auto"} size="large" />         
           </div>
-        ) : (
+        ) : 
+        cats.length > 0 ? (
           <div className="product-grid">
             {cats.map((cat, index) => (
               <CsCard
@@ -168,6 +138,10 @@ export function Home() {
                 content={<ContentCard cat={cat} />}
               />
             ))}
+          </div>
+        ) : (
+          <div className="flex justify-center mt-2!">
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
           </div>
         )}
       </div>
