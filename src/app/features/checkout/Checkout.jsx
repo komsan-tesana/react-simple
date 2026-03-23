@@ -2,14 +2,14 @@ import { useCart } from "@/app/providers/cart";
 
 export function Checkout() {
   const {
-    getCartItemsWithProducts,
+    getCartItems,
     updateQuantity,
     removeFromCart,
     getCartTotal,
     clearCart,
     cartItems:cartItems2
   } = useCart();
-  const cartItems = getCartItemsWithProducts();
+  const cartItems = getCartItems();
 
   console.log('cartItems2',cartItems2);
   
