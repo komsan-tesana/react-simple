@@ -18,7 +18,7 @@ import { useForm } from "react-hook-form";
 
 const searchSchema = z.object({
   tag: z.string().optional(),
-  limit: z.number().min(10).optional(),
+  limit: z.number().optional(),
 });
 
 function WarpRibbonCard({ cat, index }) {

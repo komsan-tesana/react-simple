@@ -19,7 +19,7 @@ export function FormSelect({ name, control,options,defaultValue,width,handleChan
           options={innerOption}
           onChange={(v) => {        
             if(handleChange) {
-               return handleChange(v)
+                handleChange(v)
             }            
             field.onChange(v)}}
         />

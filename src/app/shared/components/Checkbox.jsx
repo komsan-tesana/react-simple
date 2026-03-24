@@ -9,7 +9,7 @@ export function FormCheckbox({ name, control }) {
       render={({ field }) => (
         <Checkbox
           {...field}
-          onChange={(v) => field.onChange(v)}
+          onChange={(v) => field.onChange(v.target.checked)}
         />
       )}
     />
