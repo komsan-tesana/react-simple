@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { getCatSay } from "@/app/shared/services/cat-service";
 import { useQuery } from "@tanstack/react-query";
-import { Spin, Radio, Button, message } from "antd";
+import { Spin, Radio, Button, notification } from "antd";
 import { ProgressDonate } from "@/app/shared/components/ProgressDonate";
 import { useCart, useAuth } from "@/app/providers";
 import { useState } from "react";
@@ -29,7 +29,10 @@ export function ProductDetails() {
 
   function donate() {
     if (!hasCurrentEmail()) {
-      message.error("Should login first.");
+      notification.error({
+        title: "Error",
+        description: "Should login first.",
+      });
       return;
     }
     addToCart(cat.id, donateType);

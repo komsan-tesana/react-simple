@@ -4,7 +4,9 @@ import {
   Auth,
   Checkout,
   ProductDetails,
-  SearchCat
+  SearchCat,
+  Dashboard,
+  Adopt
 } from "@/app/features";
 import { useAuth } from "@/app/providers/auth";
 
@@ -32,12 +34,12 @@ export function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/search" element={<SearchCat />} />
-      <Route path="/virtualAdopt" element={<Home />} />
+      <Route path="/virtualAdopt/:id" element={<Adopt />} />
       <Route path="/successStories" element={<Home />} />
-
+      <Route path="checkout" element={<Checkout />} />
       {/* Admin Nested */}
-      <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><ChildrenLayout /></ProtectedRoute>}>      
-        <Route path="checkout" element={<Checkout />} />
+      <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><ChildrenLayout /></ProtectedRoute>}>         
+        <Route path="dash-board" element={<Dashboard />} />
       </Route>
 
 

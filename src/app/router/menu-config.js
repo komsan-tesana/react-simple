@@ -5,7 +5,12 @@ export const menuItems = [
 
   //Common Show
   { key: "/search", label: "Find a Cat", show: true },
-  { key: "/virtualAdopt", label: "Virtual Adopt", show: true },
+  {
+    label: "Checkout",
+    key: "/checkout",
+    show: false,
+  },
+  { key: "/virtualAdopt", label: "Virtual Adopt", show: false },
   { key: "/successStories", label: "Success Stories", show: true },
 
   // Admin
@@ -16,8 +21,8 @@ export const menuItems = [
     admin: true,
     children: [
       {
-        label: "Checkout",
-        key: "/admin/checkout",
+        label: "Dash Board",
+        key: "/admin/dash-board",
         show: true,
       },
       {
