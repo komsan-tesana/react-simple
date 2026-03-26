@@ -26,6 +26,7 @@ export function AdoptProvider({ children }) {
         {        
           ...cat,         
           user: getCurrentEmail(),
+          createdAt: new Date().toISOString(),
         },
       ]);
     }

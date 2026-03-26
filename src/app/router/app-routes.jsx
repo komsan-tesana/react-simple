@@ -11,7 +11,7 @@ import {
 import { useAuth } from "@/app/providers/auth";
 
 
-function ProtectedRoute({ children, requiredRole }) {
+function ProtectedRoute({ requiredRole }) {
   const { user, admin } = useAuth();
 
   if (!user) return <Navigate to="/auth" state={{mode : 'login'}} replace/>;
@@ -20,7 +20,7 @@ function ProtectedRoute({ children, requiredRole }) {
     return <Navigate to="/" replace/>;
   }
 
-  return children;
+  return <Outlet/>;
 }
 
 
@@ -38,7 +38,7 @@ export function AppRoutes() {
       <Route path="/successStories" element={<Home />} />
       <Route path="checkout" element={<Checkout />} />
       {/* Admin Nested */}
-      <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><ChildrenLayout /></ProtectedRoute>}>         
+      <Route path="/admin" element={<ProtectedRoute requiredRole="admin"/>}>         
         <Route path="dash-board" element={<Dashboard />} />
       </Route>
 

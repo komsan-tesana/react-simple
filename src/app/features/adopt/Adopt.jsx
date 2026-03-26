@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAdopt } from "@/app/providers/adopt";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,6 +33,11 @@ const adoptionSchema = z.object({
   }),
 });
 
+/**
+ * Adopt component
+ * @param {object} cat - Cat information
+ * @return {jsx} Adopt form
+ */
 export function Adopt() {
   const { id } = useParams();
   const {
@@ -47,24 +53,21 @@ export function Adopt() {
     gcTime: 1000 * 60 * 5,
     placeholderData: (previousData) => previousData,
   });
-  const { adoptItems,catIsAdopted, addAdopt } = useAdopt();
+  const { catIsAdopted, addAdopt } = useAdopt();
+  const [hasPets, setHasPets] = useState("");
 
   const {
     control,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(adoptionSchema),
   });
 
-  const hasPets = watch("hasPets");
   const onSubmit = (data) => {
     const adopt = { ...data, id:cat.id,cat:cat };
-    console.log("onSubmit:", adopt)
     addAdopt(adopt);
   };
-  console.log("adoptItems : \n", adoptItems);
 
   return (
     <div className="page">
@@ -171,6 +174,7 @@ export function Adopt() {
                 <FormSelect
                   name="hasPets"
                   control={control}
+                  handleChange={setHasPets}
                   options={[
                     { value: "", label: "Select" },
                     {
@@ -224,3 +228,4 @@ export function Adopt() {
     </div>
   );
 }
+

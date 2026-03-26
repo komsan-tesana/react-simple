@@ -35,7 +35,7 @@ export function ProductDetails() {
       });
       return;
     }
-    addToCart(cat.id, donateType);
+    addToCart(cat.id, donateType,cat);
     clearDonate();
   }
 
