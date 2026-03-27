@@ -7,7 +7,7 @@ import { Card, Spin, Button, Empty, message, Badge } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { catsStore } from "@/app/store/cats-store";
 import { useNavigate } from "react-router-dom";
-import { useAuth, useAdopt } from "@/app/providers";
+import { useAuth, useAdopt, useFavorites } from "@/app/providers";
 
 const { Meta } = Card;
 
@@ -63,6 +63,7 @@ function WarpRibbonCard({ cat, index }) {
 function ContentCard({ cat }) {
   const { hasCurrentEmail } = useAuth();
   const { catIsAdopted } = useAdopt();
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   const navigate = useNavigate();
 
@@ -82,7 +83,20 @@ function ContentCard({ cat }) {
 
   return (
     <div className="flex flex-col">
-      <Meta title={cat.name} description={desc()} />
+      <div className="flex justify-between items-start">
+        <Meta title={cat.name} description={desc()} />
+        <Button
+          type={isFavorite(cat.id) ? "primary" : "default"}
+          danger={isFavorite(cat.id)}
+          shape="circle"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(cat);
+          }}
+        >
+          ♡
+        </Button>
+      </div>
 
       <div className="mt-4!">
         <ProgressDonate key={cat.id + "-" + cat.name} cat={cat} />

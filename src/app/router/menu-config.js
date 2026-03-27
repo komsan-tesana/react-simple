@@ -5,6 +5,7 @@ export const menuItems = [
 
   //Common Show
   { key: "/search", label: "Find a Cat", show: true },
+  { key: "/favorites", label: "Favorites", show: true },
   {
     label: "Checkout",
     key: "/checkout",

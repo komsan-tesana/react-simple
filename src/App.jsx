@@ -1,6 +1,6 @@
 import "./App.css";
 import { AppRoutes } from "@/app/router";
-import { AuthProvider, CartProvider,AdoptProvider } from "@/app/providers";
+import { AuthProvider, CartProvider,AdoptProvider, FavoritesProvider } from "@/app/providers";
 import Navbar from "@/app/shared/components/Navbar";
 import { Layout, theme } from "antd";
 import logo from "@/assets/images/paw.png";
@@ -14,8 +14,9 @@ function App() {
 
   return (
     <AuthProvider>
-      <CartProvider>
-        <AdoptProvider>
+      <FavoritesProvider>
+        <CartProvider>
+          <AdoptProvider>
           <div className="app">
             <Layout>
               <Header
@@ -61,11 +62,12 @@ function App() {
               <Footer style={{ textAlign: "center" }}>
                 Ant Design ©{new Date().getFullYear()} Created by Ant
               </Footer>
-            </Layout>
+              </Layout>
           </div>
         </AdoptProvider>
       </CartProvider>
-    </AuthProvider>
+    </FavoritesProvider>
+  </AuthProvider>
   );
 }
 
