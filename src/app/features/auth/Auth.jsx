@@ -1,121 +1,162 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useCallback } from "react";
 import { useAuth } from "@/app/providers/auth";
-import { Button } from "antd";
+import { Button, Form, Input, Card, message, Tabs } from "antd";
+import { LockOutlined, MailOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export function Auth() {
   const location = useLocation();
   const state = location.state;
-  const [mode, setMode] = useState(state?.mode || "signup");
+  const initialMode = state?.mode || "signup";
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { signUp, login } = useAuth();
+  const [form] = Form.useForm();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
-
-  function onSubmit(data) {
+  const onSubmit = useCallback((values) => {
     setError(null);
+    setLoading(true);
+
     let result;
-    if (mode === "signup") {
-      result = signUp(data.email, data.password);
+    if (initialMode === "signup") {
+      result = signUp(values.email, values.password);
     } else {
-      result = login(data.email, data.password);
+      result = login(values.email, values.password);
     }
 
+    setLoading(false);
+
     if (result.success) {
+      message.success(initialMode === "signup" ? "Account created!" : "Welcome back!");
       navigate("/");
     } else {
       setError(result.error);
     }
-  }
+  }, [initialMode, signUp, login, navigate]);
+
+  const toggleMode = useCallback(() => {
+    setError(null);
+    form.resetFields();
+  }, [form]);
+
+  const items = [
+    {
+      key: "signup",
+      label: "Sign Up",
+      children: (
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onSubmit}
+          size="large"
+          requiredMark={false}
+        >
+          {error && (
+            <div className="form-error-banner" role="alert">
+              {error}
+            </div>
+          )}
+          <Form.Item
+            name="email"
+            rules={[
+              { required: true, message: "Please enter your email" },
+              { type: "email", message: "Please enter a valid email" },
+            ]}
+          >
+            <Input prefix={<MailOutlined />} placeholder="Email" />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            rules={[
+              { required: true, message: "Please enter your password" },
+              { min: 6, message: "Password must be at least 6 characters" },
+            ]}
+          >
+            <Input.Password prefix={<LockOutlined />} placeholder="Password" />
+          </Form.Item>
+          <Form.Item>
+            <Button
+              htmlType="submit"
+              variant="solid"
+              color="primary"
+              loading={loading}
+              block
+            >
+              Create Account
+            </Button>
+          </Form.Item>
+        </Form>
+      ),
+    },
+    {
+      key: "login",
+      label: "Login",
+      children: (
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onSubmit}
+          size="large"
+          requiredMark={false}
+        >
+          {error && (
+            <div className="form-error-banner" role="alert">
+              {error}
+            </div>
+          )}
+          <Form.Item
+            name="email"
+            rules={[
+              { required: true, message: "Please enter your email" },
+              { type: "email", message: "Please enter a valid email" },
+            ]}
+          >
+            <Input prefix={<MailOutlined />} placeholder="Email" />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            rules={[{ required: true, message: "Please enter your password" }]}
+          >
+            <Input.Password prefix={<LockOutlined />} placeholder="Password" />
+          </Form.Item>
+          <Form.Item>
+            <Button
+              htmlType="submit"
+              variant="solid"
+              color="primary"
+              loading={loading}
+              block
+            >
+              Login
+            </Button>
+          </Form.Item>
+        </Form>
+      ),
+    },
+  ];
 
   return (
     <div className="page">
       <div className="container">
-        <div className="auth-container">
-          <h1 className="page-title">
-            {mode === "signup" ? "Sign Up" : "Login"}
-          </h1>
-          <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
-            {error && <div className="error-message">{error}</div>}
-            <div className="form-group">
-              <label className="form-label" htmlFor="email">
-                Email
-              </label>
-              <input
-                className="form-input"
-                type="email"
-                id="email"
-                {...register("email", { required: "Email is required" })}
-              />
-              {errors.email && (
-                <span className="form-error">{errors.email.message}</span>
-              )}
-            </div>
-            <div className="form-group">
-              <label className="form-label" htmlFor="password">
-                Password
-              </label>
-              <input
-                {...register("password", {
-                  required: "Password is required",
-                  minLength: {
-                    value: 6,
-                    message: "Password must be at least 6 characters",
-                  },
-                  maxLength: {
-                    value: 12,
-                    message: "Password must be less than 12 characters",
-                  },
-                })}
-                className="form-input"
-                type="password"
-                id="password"
-              />
-              {errors.password && (
-                <span className="form-error">{errors.password.message}</span>
-              )}
-            </div>
-
-            <div className="flex justify-center">
-                <Button htmlType="submit" size="large" variant="solid" color="blue">
-                  {mode === "signup" ? "Sign Up" : "Login"}
-                </Button>
-            </div>
-          </form>
-
-          <div className="auth-switch">
-            {mode === "signup" ? (
-              <p>
-                Already have an account?
-                <Button
-                  variant="link"
-                  color="blue"
-                  onClick={() => setMode("login")}
-                >
-                  Login
-                </Button>
-              </p>
-            ) : (
-              <p>
-                {" "}
-                Don't have an account?
-                <Button
-                  variant="link"
-                  color="blue"
-                  onClick={() => setMode("signup")}
-                >
-                  Sign Up
-                </Button>
-              </p>
-            )}
+        <Card className="auth-card" bordered={false}>
+          <div className="auth-header">
+            <h1 className="auth-title">
+              {initialMode === "signup" ? "Create Account" : "Welcome Back"}
+            </h1>
+            <p className="auth-subtitle">
+              {initialMode === "signup"
+                ? "Join us to help cats find their forever homes"
+                : "Sign in to continue helping cats"}
+            </p>
           </div>
-        </div>
+          <Tabs
+            activeKey={initialMode}
+            items={items}
+            onChange={toggleMode}
+            centered
+          />
+        </Card>
       </div>
     </div>
   );

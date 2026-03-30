@@ -6,9 +6,9 @@ import { Controller, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getCatSay } from "@/app/shared/services/cat-service";
-import { Radio, Button, Spin } from "antd";
+import { Radio, Button, Spin, Steps, Card, Result } from "antd";
+import { UserOutlined, HomeOutlined, CheckCircleOutlined } from "@ant-design/icons";
 
-// Component
 import { FormInputNumber } from "@/app/shared/components/InputNumber";
 import { FormInput } from "@/app/shared/components/Input";
 import { FormTextArea } from "@/app/shared/components/TextArea";
@@ -33,11 +33,12 @@ const adoptionSchema = z.object({
   }),
 });
 
-/**
- * Adopt component
- * @param {object} cat - Cat information
- * @return {jsx} Adopt form
- */
+const stepItems = [
+  { title: "Applicant Info", icon: <UserOutlined /> },
+  { title: "Home Environment", icon: <HomeOutlined /> },
+  { title: "Review & Submit", icon: <CheckCircleOutlined /> },
+];
+
 export function Adopt() {
   const { id } = useParams();
   const {
@@ -47,7 +48,7 @@ export function Adopt() {
   } = useQuery({
     queryKey: ["cat", id],
     queryFn: ({ signal }) => getCatSay(id, "Meow..", signal),
-    staleTime: 1000 * 60, // 1 min
+    staleTime: 1000 * 60,
     cacheTime: 1000 * 60 * 5,
     keepPreviousData: true,
     gcTime: 1000 * 60 * 5,
@@ -55,174 +56,235 @@ export function Adopt() {
   });
   const { catIsAdopted, addAdopt } = useAdopt();
   const [hasPets, setHasPets] = useState("");
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const {
     control,
     handleSubmit,
+    trigger,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(adoptionSchema),
   });
 
   const onSubmit = (data) => {
-    const adopt = { ...data, id:cat.id,cat:cat };
+    const adopt = { ...data, id: cat.id, cat: cat };
     addAdopt(adopt);
+    setIsSubmitted(true);
   };
+
+  const nextStep = async () => {
+    let fieldsToValidate = [];
+    if (currentStep === 0) {
+      fieldsToValidate = ["fullName", "age", "phone"];
+    } else if (currentStep === 1) {
+      fieldsToValidate = ["homeType", "hasPets"];
+    }
+
+    const isValid = await trigger(fieldsToValidate);
+    if (isValid) {
+      setCurrentStep((prev) => Math.min(prev + 1, 2));
+    }
+  };
+
+  const prevStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  };
+
+  if (isSubmitted) {
+    return (
+      <div className="page">
+        <div className="container">
+          <Result
+            status="success"
+            title="Application Submitted!"
+            subTitle={`Thank you for your interest in adopting ${cat.name}. We will contact you soon.`}
+            extra={[
+              <Button type="primary" key="home" href="/">
+                Back to Home
+              </Button>,
+            ]}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page">
-      {error && <p>Error...</p>}
+      {error && (
+        <div className="container">
+          <Card>
+            <Result
+              status="error"
+              title="Error Loading Cat"
+              subTitle="Please try again later."
+            />
+          </Card>
+        </div>
+      )}
       {isLoading ? (
-        <div className="flex justify-center mt-2!">
-          <Spin percent={"auto"} size="large" />
+        <div className="container flex-center">
+          <Spin size="large" />
         </div>
       ) : (
         <div className="container">
-          <h1 className="page-title">Adopt : {cat.name}</h1>
+          <h1 className="page-title">Adopt {cat.name}</h1>
 
-          <div className="product-detail bg-white shadow-lg rounded-xl p-6">
-            {/* Header */}
-            <div className="product-detail-image col-span-2">
-              <img src={cat.url || null} alt={cat.name} />
+          <Card className="adopt-card">
+            <div className="adopt-cat-header">
+              <img
+                src={cat.url || null}
+                alt={cat.name}
+                className="adopt-cat-image"
+              />
+              <div className="adopt-cat-info">
+                <h2>{cat.name}</h2>
+                <p>{cat.tags?.join(", ") || "No tags"}</p>
+              </div>
             </div>
 
-            {/* Step */}
-            <div className="col-span-2 flex justify-center gap-4 mb-6 text-sm">
-              <span className="font-semibold text-blue-600">
-                STEP 1: Applicant Info
-              </span>
-              <span>→</span>
-              <span>STEP 2: Home Env</span>
-            </div>
+            <Steps
+              current={currentStep}
+              items={stepItems}
+              className="adopt-steps"
+              size="small"
+            />
 
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="space-y-4 col-span-2"
-            >
-              {/* Name + Age */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="fullName">Full Name</label>                 
-                  <FormInput name="fullName" control={control} />
-                  <p className="text-red-500">{errors.fullName?.message}</p>
-                </div>
+            <form onSubmit={handleSubmit(onSubmit)} className="adopt-form">
+              {currentStep === 0 && (
+                <div className="form-step">
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label htmlFor="fullName">Full Name *</label>
+                      <FormInput name="fullName" control={control} placeholder="Enter your full name" />
+                      {errors.fullName && (
+                        <span className="form-error">{errors.fullName.message}</span>
+                      )}
+                    </div>
 
-                <div className="flex flex-col">
-                  <label htmlFor="age">Age</label>
-                  <FormInputNumber name="age" control={control} />
-                  <p className="text-red-500">{errors.age?.message}</p>
-                </div>
-              </div>
+                    <div className="form-field">
+                      <label htmlFor="age">Age *</label>
+                      <FormInputNumber name="age" control={control} placeholder="18+" />
+                      {errors.age && (
+                        <span className="form-error">{errors.age.message}</span>
+                      )}
+                    </div>
+                  </div>
 
-              {/* Phone + Line */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="phone">Phone</label>
-                  {/* <input {...register("phone")} className="input" /> */}                
-                  <FormInput name="phone" control={control} />
-                  <p className="text-red-500">{errors.phone?.message}</p>
-                </div>
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label htmlFor="phone">Phone *</label>
+                      <FormInput name="phone" control={control} placeholder="Enter phone number" />
+                      {errors.phone && (
+                        <span className="form-error">{errors.phone.message}</span>
+                      )}
+                    </div>
 
-                <div>
-                  <label htmlFor="lineId">Line ID</label>
-                  {/* <input {...register("lineId")} className="input" /> */}            
-                  <FormInput name="lineId" control={control} />
-                </div>
-              </div>
-
-              {/* Home Type */}
-              <div>
-                <label className="block mb-1" htmlFor="homeType">
-                  Your Home Style
-                </label>
-
-                <Controller
-                  name="homeType"
-                  control={control}
-                  render={({ field }) => (
-                    <Radio.Group
-                      {...field}
-                      className="w-full"
-                      onChange={(e) => field.onChange(e.target.value)}
-                      options={[
-                        { value: "house", label: "House" },
-                        {
-                          value: "condo",
-                          label: "Condo",
-                        },
-                        {
-                          value: "other",
-                          label: "Other",
-                        },
-                      ]}
-                    />
-                  )}
-                />
-                <p className="text-red-500">{errors.homeType?.message}</p>
-              </div>
-
-              {/* Pets */}
-              <div className="flex flex-col">
-                <label htmlFor="hasPets">Do you have other pets?</label>
-                {/* <select {...register("hasPets")} className="input">
-                <option value="">Select</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select> */}
-
-        
-                <FormSelect
-                  name="hasPets"
-                  control={control}
-                  handleChange={setHasPets}
-                  options={[
-                    { value: "", label: "Select" },
-                    {
-                      value: "true",
-                      label: "Yes",
-                    },
-                    {
-                      value: "false",
-                      label: "No",
-                    },
-                  ]}
-                />
-              </div>
-
-              {/* Conditional field */}
-              {hasPets === "true" && (
-                <div>
-                  <label htmlFor="petDetails">Pet Details</label>
-                  {/* <input {...register("petDetails")} className="input" /> */}               
-                  <FormTextArea name="petDetails" control={control} />
+                    <div className="form-field">
+                      <label htmlFor="lineId">Line ID</label>
+                      <FormInput name="lineId" control={control} placeholder="Optional" />
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {/* Upload */}
-              {/* <div>
-                <label>Home Photos</label>
-                <input type="file" multiple className="input" />
-              </div> */}
+              {currentStep === 1 && (
+                <div className="form-step">
+                  <div className="form-field">
+                    <label>Your Home Style *</label>
+                    <Controller
+                      name="homeType"
+                      control={control}
+                      render={({ field }) => (
+                        <Radio.Group
+                          {...field}
+                          className="home-type-group"
+                          onChange={(e) => field.onChange(e.target.value)}
+                        >
+                          <Radio.Button value="house">House</Radio.Button>
+                          <Radio.Button value="condo">Condo</Radio.Button>
+                          <Radio.Button value="other">Other</Radio.Button>
+                        </Radio.Group>
+                      )}
+                    />
+                    {errors.homeType && (
+                      <span className="form-error">{errors.homeType.message}</span>
+                    )}
+                  </div>
 
-              {/* Agree */}
-              <div className="flex flex-col">
-                <div className="flex gap-2">             
-                  <FormCheckbox name="agree" control={control} />
-                  <label htmlFor="agree">
-                    {/* <input type="checkbox" {...register("agree")} /> */}I
-                    agree to provide monthly updates for 6 months.
-                  </label>
+                  <div className="form-field">
+                    <label>Do you have other pets? *</label>
+                    <FormSelect
+                      name="hasPets"
+                      control={control}
+                      handleChange={setHasPets}
+                      options={[
+                        { value: "", label: "Select" },
+                        { value: "true", label: "Yes" },
+                        { value: "false", label: "No" },
+                      ]}
+                    />
+                  </div>
+
+                  {hasPets === "true" && (
+                    <div className="form-field">
+                      <label htmlFor="petDetails">Pet Details</label>
+                      <FormTextArea
+                        name="petDetails"
+                        control={control}
+                        placeholder="Please describe your other pets"
+                        rows={3}
+                      />
+                    </div>
+                  )}
                 </div>
-                <p className="text-red-500">{errors.agree?.message}</p>
-              </div>
-              {/* Submit */}
-              <div className="text-center">
-                <Button disabled={!!catIsAdopted(cat)} htmlType="submit" variant="solid" color="primary">
-                  Submit
-                </Button>
+              )}
+
+              {currentStep === 2 && (
+                <div className="form-step">
+                  <div className="agreement-section">
+                    <p className="agreement-title">Agreement</p>
+                    <p className="agreement-text">
+                      I agree to provide monthly updates about the cat for at least 6 months 
+                      after adoption. This helps us ensure the cat is well-cared for.
+                    </p>
+                    <div className="agreement-checkbox">
+                      <FormCheckbox name="agree" control={control} />
+                      <label htmlFor="agree">
+                        I agree to the terms and conditions
+                      </label>
+                    </div>
+                    {errors.agree && (
+                      <span className="form-error">{errors.agree.message}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="form-actions">
+                {currentStep > 0 && (
+                  <Button onClick={prevStep}>
+                    Previous
+                  </Button>
+                )}
+                {currentStep < 2 ? (
+                  <Button type="primary" onClick={nextStep}>
+                    Next
+                  </Button>
+                ) : (
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    disabled={!!catIsAdopted(cat)}
+                  >
+                    Submit Application
+                  </Button>
+                )}
               </div>
             </form>
-          </div>
+          </Card>
         </div>
       )}
     </div>

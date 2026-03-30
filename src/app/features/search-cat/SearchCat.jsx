@@ -1,144 +1,29 @@
-import { useEffect, useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { getCats, getTags } from "@/app/shared/services/cat-service";
-import { FormSelect } from "@/app/shared/components/Select";
-import { CsCard } from "@/app/shared/components/Card";
-import { ProgressDonate } from "@/app/shared/components/ProgressDonate";
-import { Card, Spin, Button, Empty, message, Badge } from "antd";
+import { CatCard, CatCardSkeleton } from "@/app/shared/components/CatCard";
+import { Button, Empty, Card, Row, Col, Select } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { catsStore } from "@/app/store/cats-store";
-import { useNavigate } from "react-router-dom";
-import { useAuth, useAdopt, useFavorites } from "@/app/providers";
-
-const { Meta } = Card;
-
-// User for from searchSchema
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 
 const searchSchema = z.object({
   tag: z.string().optional(),
   limit: z.number().optional(),
 });
 
-function WarpRibbonCard({ cat, index }) {
-  const { catIsAdopted } = useAdopt();
-  if (catIsAdopted(cat)) {
-    return (
-      <Badge.Ribbon text="Adopted" color="green">
-        <CsCard
-          cover={
-            <img
-              loading="eager"
-              draggable={false}
-              alt={cat.url || null}
-              src={cat.url || null}
-            />
-          }
-          classNameCard={"home-card"}
-          key={cat.id || index}
-          content={<ContentCard cat={cat} />}
-        />
-      </Badge.Ribbon>
-    );
-  }
-
-  return (
-    <CsCard
-      cover={
-        <img
-          loading="eager"
-          draggable={false}
-          alt={cat.url || null}
-          src={cat.url || null}
-        />
-      }
-      classNameCard={"home-card"}
-      key={cat.id || index}
-      content={<ContentCard cat={cat} />}
-    />
-  );
-}
-
-function ContentCard({ cat }) {
-  const { hasCurrentEmail } = useAuth();
-  const { catIsAdopted } = useAdopt();
-  const { toggleFavorite, isFavorite } = useFavorites();
-
-  const navigate = useNavigate();
-
-  function desc() {
-    const adp = catIsAdopted(cat);
-
-    if (adp) {
-      return (
-        <>
-          <h1>Tags : {cat.tags?.join(",") || ""}</h1>
-          <h1>Owner : {adp.fullName + " " + "(" + adp.user + ")"}</h1>
-        </>
-      );
-    }
-    return <h1>Tags : {cat.tags?.join(",") || ""}</h1>;
-  }
-
-  return (
-    <div className="flex flex-col">
-      <div className="flex justify-between items-start">
-        <Meta title={cat.name} description={desc()} />
-        <Button
-          type={isFavorite(cat.id) ? "primary" : "default"}
-          danger={isFavorite(cat.id)}
-          shape="circle"
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleFavorite(cat);
-          }}
-        >
-          ♡
-        </Button>
-      </div>
-
-      <div className="mt-4!">
-        <ProgressDonate key={cat.id + "-" + cat.name} cat={cat} />
-        <div className="flex justify-center mt-4!">
-          <Button
-            className="mr-2!"
-            onClick={() => {
-              navigate(`/products/${cat.id}`);
-            }}
-          >
-            View Detail
-          </Button>
-          <Button
-            className="mr-2!"
-            disabled={catIsAdopted(cat)}
-            onClick={() => {
-              if (!hasCurrentEmail()) {
-                message.error("Should login first.");
-                return;
-              }
-
-              navigate(`/virtualAdopt/${cat.id}`);
-            }}
-          >
-            Adoption
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function SearchCat() {
   const limit = catsStore((state) => state.limit);
   const setLimit = catsStore((state) => state.setLimit);
   const defaultTags = catsStore((state) => state.defaultTags);
   const setDefaultTags = catsStore((state) => state.setDefaultTags);
-  const [tags, setTags] = useState([]);
+
   const [selectedTags, setSelectedTags] = useState(defaultTags);
   const [searchParams, setSearchParams] = useState({
     tags: defaultTags,
-    limit: limit,
+    limit,
   });
 
   const {
@@ -150,91 +35,161 @@ export function SearchCat() {
     queryKey: ["cats", searchParams],
     queryFn: ({ signal }) =>
       getCats(searchParams.tags, searchParams.limit, signal),
-    staleTime: 1000 * 60, // 1 min
+    staleTime: 1000 * 60,
     cacheTime: 1000 * 60 * 5,
     keepPreviousData: true,
   });
 
+  const { data: tags = [],isLoading:isLoadingTags } = useQuery({
+    queryKey: ["tags"],
+    queryFn: getTags,
+    staleTime: 1000 * 60,
+    cacheTime: 1000 * 60 * 5,
+    placeholderData: [],
+  });
+
+  console.error('tags',tags);
+  console.error('isLoadingTags',isLoadingTags);
+  
   const { control } = useForm({
     resolver: zodResolver(searchSchema),
   });
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     setSearchParams({
       tags: [...selectedTags],
       limit,
     });
-  };
+  }, [selectedTags, limit]);
 
-  useEffect(() => {
-    setLimit(limit);
-  }, [limit, setLimit]);
+  const handleTagChange = useCallback((value) => {
+    setSelectedTags(value);
+    setDefaultTags(value);
+  }, [setDefaultTags]);
 
-  useEffect(() => {
-    setDefaultTags(selectedTags);
-  }, [selectedTags, setDefaultTags]);
+  const handleLimitChange = useCallback((value) => {
+    setLimit(value);
+  }, [setLimit]);
 
-  useEffect(() => {
-    getTags().then((tags) => setTags(tags));
-  }, []);
-
-  console.log("cats", cats);
+  const skeletonArray = useMemo(
+    () => Array.from({ length: searchParams.limit || 10 }, (_, i) => i),
+    [searchParams.limit]
+  );
 
   return (
     <div className="page">
       <div className="container">
         <h2 className="page-title">Our Cats</h2>
 
-        <div className="flex flex-col">
-          <label htmlFor="tag">Tag </label>
+        <Card className="search-filters-card">
+          <Row gutter={[16, 16]} align="middle">
+            <Col xs={24} sm={12} md={10}>
+              <label className="filter-label">Filter by Tags</label>
+              <Controller
+                name="tag"
+                control={control}
+                defaultValue={defaultTags}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    mode="multiple"
+                    placeholder="Select tags"
+                    style={{ width: "100%" }}
+                    options={tags}
+                    value={selectedTags}
+                    onChange={handleTagChange}
+                    loading={isLoadingTags} 
+                    allowClear
+                  />
+                )}
+              />
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <label className="filter-label">Results</label>
+              <Controller
+                name="limit"
+                control={control}
+                defaultValue={limit}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    style={{ width: "100%" }}
+                    options={[
+                      { label: "10 cats", value: 10 },
+                      { label: "30 cats", value: 30 },
+                      { label: "50 cats", value: 50 },
+                      { label: "100 cats", value: 100 },
+                    ]}
+                    onChange={(value) => {
+                      field.onChange(value);
+                      handleLimitChange(value);
+                    }}
+                  />
+                )}
+              />
+            </Col>
+            <Col xs={24} sm={24} md={8}>
+              <div className="filter-actions">
+                <Button
+                  type="primary"
+                  icon={<SearchOutlined />}
+                  onClick={handleSearch}
+                  loading={isFetching}
+                  size="large"
+                >
+                  Search
+                </Button>
+              </div>
+            </Col>
+          </Row>
+        </Card>
 
-          <FormSelect
-            defaultValue={defaultTags}
-            mode="multiple"
-            name="tag"
-            options={tags}
-            control={control}
-            handleChange={setSelectedTags}
-          />
+        {error && (
+          <Card className="error-card">
+            <Empty
+              image={Empty.PRESENTED_IMAGE_ERROR}
+              description="Error loading cats. Please try again."
+            >
+              <Button type="primary" onClick={handleSearch}>
+                Retry
+              </Button>
+            </Empty>
+          </Card>
+        )}
 
-          <label htmlFor="limit">Limit </label>
-
-          <FormSelect
-            width={100}
-            name="limit"
-            defaultValue={limit}
-            options={[
-              { label: "10", value: 10 },
-              { label: "30", value: 30 },
-              { label: "50", value: 50 },
-              { label: "100", value: 100 },
-            ]}
-            control={control}
-            handleChange={setLimit}
-          />
-        </div>
-
-        <div className="flex justify-start mt-2!">
-          <Button variant="solid" color="blue" onClick={() => handleSearch()}>
-            Search
-          </Button>
-        </div>
-
-        {error && <p>Error...</p>}
-        {isFetching || isLoading ? (
-          <div className="flex justify-center mt-2!">
-            <Spin percent={"auto"} size="large" />
-          </div>
-        ) : cats.length > 0 ? (
-          <div className="product-grid">
-            {cats.map((cat, index) => (
-              <WarpRibbonCard key={cat.id || index} cat={cat} index={index} />
+        {isLoading ? (
+          <Row gutter={[24, 24]}>
+            {skeletonArray.map((index) => (
+              <Col key={index} xs={24} sm={12} md={8} lg={6}>
+                <CatCardSkeleton />
+              </Col>
             ))}
-          </div>
+          </Row>
+        ) : cats.length > 0 ? (
+          <Row gutter={[24, 24]}>
+            {cats.map((cat, index) => (
+              <Col key={cat.id || index} xs={24} sm={12} md={8} lg={6}>
+                <CatCard cat={cat} />
+              </Col>
+            ))}
+          </Row>
         ) : (
-          <div className="flex justify-center mt-2!">
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
-          </div>
+          <Card className="empty-card">
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <span>
+                  No cats found matching your criteria.
+                  <br />
+                  Try adjusting your filters.
+                </span>
+              }
+            >
+              <Button onClick={() => { setSelectedTags([]); handleSearch(); }}>
+                Clear Filters
+              </Button>
+            </Empty>
+          </Card>
         )}
       </div>
     </div>

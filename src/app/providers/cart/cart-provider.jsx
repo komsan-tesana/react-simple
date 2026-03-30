@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { CartContext } from "./cart-context";
 import { useAuth } from "@/app/providers/auth";
 import { notification } from "antd";
@@ -8,9 +8,7 @@ export function CartProvider({ children }) {
   const { getCurrentEmail } = useAuth();
   const [cartItems, setCartItems] = useState([]);
 
-  function addToCart(productId, donateType, cat) {
-    const existing = cartItems.find((item) => item.id === productId);
-
+  const addToCart = useCallback((productId, donateType, cat) => {
     if (!donateType) {
       notification.error({
         title: "Error",
@@ -19,80 +17,56 @@ export function CartProvider({ children }) {
       return;
     }
 
-    if (existing) {
-      const currentFood = donateType == 1 ? existing.food + 10 : existing.food;
-      const currentMedical =
-        donateType == 2 ? existing.medical + 10 : existing.medical;
-      const currentSupplies =
-        donateType == 3 ? existing.supplies + 10 : existing.supplies;
-      const updatedCartItems = cartItems.map((item) =>
-        item.id === productId
-          ? {
-              id: productId,
-              cat,
-              food: currentFood,
-              medical: currentMedical,
-              supplies: currentSupplies,
-              // quantity: currentQuantity + 10,
-              users: uniq([...item.users, getCurrentEmail()]),
-            }
-          : item,
-      );
-      setCartItems(updatedCartItems);
-    } else {
-      setCartItems([
-        ...cartItems,
+    setCartItems((prevItems) => {
+      const existing = prevItems.find((item) => item.id === productId);
+
+      if (existing) {
+        return prevItems.map((item) =>
+          item.id === productId
+            ? {
+                ...item,
+                cat,
+                food: donateType === 1 ? item.food + 10 : item.food,
+                medical: donateType === 2 ? item.medical + 10 : item.medical,
+                supplies: donateType === 3 ? item.supplies + 10 : item.supplies,
+                users: uniq([...item.users, getCurrentEmail()]),
+              }
+            : item,
+        );
+      }
+
+      return [
+        ...prevItems,
         {
           id: productId,
           cat,
-          food: donateType == 1 ? 10 : 0,
-          medical: donateType == 2 ? 10 : 0,
-          supplies: donateType == 3 ? 10 : 0,
-          // quantity: 10,
+          food: donateType === 1 ? 10 : 0,
+          medical: donateType === 2 ? 10 : 0,
+          supplies: donateType === 3 ? 10 : 0,
           users: [getCurrentEmail()],
         },
-      ]);
-    }
-  }
+      ];
+    });
+  }, [getCurrentEmail]);
 
-  function getCartItems() {
-    return cartItems
-      .map((item) => ({
-        ...item,
-        // product: getProductById(item.id),
-      }))
-      .filter((item) => item.product);
-  }
+  const removeFromCart = useCallback((productId) => {
+    setCartItems((prevItems) => prevItems.filter((item) => item.id !== productId));
+  }, []);
 
-  function removeFromCart(productId) {
-    setCartItems(cartItems.filter((item) => item.id !== productId));
-  }
-
-  function getCartTotal() {
-    const total = cartItems.reduce((total) => {
-      // const product = getProductById(item.id);
-      // return total + (product ? product.price * item.quantity : 0);
-      return total;
-    }, 0);
-    return total;
-  }
-
-  function clearCart() {
+  const clearCart = useCallback(() => {
     setCartItems([]);
-  }
+  }, []);
 
-  function productInCart(id) {
+  const productInCart = useCallback((id) => {
     return cartItems.find((item) => item.id === id);
-  }
+  }, [cartItems]);
 
   return (
     <CartContext.Provider
       value={{
         cartItems,
         addToCart,
-        getCartItems,
         removeFromCart,
-        getCartTotal,
         clearCart,
         productInCart,
       }}

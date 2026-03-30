@@ -1,4 +1,4 @@
-import { Routes, Route,Outlet,Navigate } from "react-router-dom";
+import { Routes, Route, Outlet, Navigate } from "react-router-dom";
 import {
   Home,
   Auth,
@@ -12,22 +12,18 @@ import {
 } from "@/app/features";
 import { useAuth } from "@/app/providers/auth";
 
-
 function ProtectedRoute({ requiredRole }) {
   const { user, admin } = useAuth();
 
-  if (!user) return <Navigate to="/auth" state={{mode : 'login'}} replace/>;
-
-  if (requiredRole === 'admin' && !admin) {
-    return <Navigate to="/" replace/>;
+  if (!user) {
+    return <Navigate to="/auth" state={{ mode: "login" }} replace />;
   }
 
-  return <Outlet/>;
-}
+  if (requiredRole === "admin" && !admin) {
+    return <Navigate to="/" replace />;
+  }
 
-
-function ChildrenLayout() {
-  return (<Outlet/>)
+  return <Outlet />;
 }
 
 export function AppRoutes() {
@@ -40,12 +36,9 @@ export function AppRoutes() {
       <Route path="/virtualAdopt/:id" element={<Adopt />} />
       <Route path="/successStories" element={<SuccessStories />} />
       <Route path="checkout" element={<Checkout />} />
-      {/* Admin Nested */}
-      <Route path="/admin" element={<ProtectedRoute requiredRole="admin"/>}>         
+      <Route path="/admin" element={<ProtectedRoute requiredRole="admin" />}>
         <Route path="dash-board" element={<Dashboard />} />
       </Route>
-
-
       <Route path="/products/:id" element={<ProductDetails />} />
     </Routes>
   );

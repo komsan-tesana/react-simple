@@ -1,13 +1,12 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { getCatSay } from "@/app/shared/services/cat-service";
 import { useQuery } from "@tanstack/react-query";
 import { Spin, Radio, Button, notification } from "antd";
 import { ProgressDonate } from "@/app/shared/components/ProgressDonate";
 import { useCart, useAuth } from "@/app/providers";
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 
 export function ProductDetails() {
-  const navigate = useNavigate();
   const [donateType, setDonateType] = useState();
   const { id } = useParams();
   const {
@@ -16,18 +15,19 @@ export function ProductDetails() {
     error,
   } = useQuery({
     queryKey: ["cat", id],
-    queryFn: ({ signal }) => {
-      return getCatSay(id, "Meow..", signal);
-    },
+    queryFn: ({ signal }) => getCatSay(id, "Meow..", signal),
   });
+
   const { productInCart, addToCart } = useCart();
   const { hasCurrentEmail } = useAuth();
-  const food = productInCart(cat.id)?.food || 0;
-  const medical = productInCart(cat.id)?.medical || 0;
-  const supplies = productInCart(cat.id)?.supplies || 0;
-  const supporters = productInCart(cat.id)?.users || [];
 
-  function donate() {
+  const cartItem = useMemo(() => productInCart(cat.id), [productInCart, cat.id]);
+  const food = cartItem?.food || 0;
+  const medical = cartItem?.medical || 0;
+  const supplies = cartItem?.supplies || 0;
+  const supporters = cartItem?.users || [];
+
+  const donate = useCallback(() => {
     if (!hasCurrentEmail()) {
       notification.error({
         title: "Error",
@@ -35,19 +35,9 @@ export function ProductDetails() {
       });
       return;
     }
-    addToCart(cat.id, donateType,cat);
-    clearDonate();
-  }
-
-  function clearDonate() {
-    if (food === 90 || medical === 90 || supplies === 90) {
-      setDonateType(undefined);
-    }
-  }
-
-  if (!cat) {
-    navigate("/");
-  }
+    addToCart(cat.id, donateType, cat);
+    setDonateType(undefined);
+  }, [hasCurrentEmail, addToCart, donateType, cat]);
 
   if (error) {
     return <h1>Error...</h1>;
@@ -69,7 +59,7 @@ export function ProductDetails() {
               <div className="product-detail-content">
                 <h1 className="product-detail-name">{cat.name}</h1>
                 <h1 className="product-detail-description">
-                  {cat.tags.join(",") || "No-Tags"}
+                  {cat.tags?.join(",") || "No-Tags"}
                 </h1>
                 <ProgressDonate cat={cat} showAction={true} />
               </div>
@@ -86,24 +76,14 @@ export function ProductDetails() {
                     onChange={(e) => setDonateType(e.target.value)}
                     options={[
                       { value: 1, label: "$10 Food", disabled: food === 100 },
-                      {
-                        value: 2,
-                        label: "$10 Medical",
-                        disabled: medical === 100,
-                      },
-                      {
-                        value: 3,
-                        label: "$10 Supplies",
-                        disabled: supplies === 100,
-                      },
+                      { value: 2, label: "$10 Medical", disabled: medical === 100 },
+                      { value: 3, label: "$10 Supplies", disabled: supplies === 100 },
                     ]}
                   />
                 </div>
                 <div className="product-detail-footer flex justify-start">
                   <Button
-                    disabled={
-                      food === 100 && medical === 100 && supplies === 100
-                    }
+                    disabled={food === 100 && medical === 100 && supplies === 100}
                     onClick={donate}
                     color="primary"
                     variant="solid"

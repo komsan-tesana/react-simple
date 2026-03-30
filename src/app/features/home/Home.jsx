@@ -1,8 +1,11 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, lazy, Suspense } from "react";
 import { getCatsHero } from "../../shared/services/cat-service";
-import { Carousel, Skeleton } from "antd";
+import { Carousel, Skeleton, Card, Row, Col, Button, Empty } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { useAdopt, useCart } from "@/app/providers";
+import { Link } from "react-router-dom";
+
+const CatCard = lazy(() => import("@/app/shared/components/CatCard").then(module => ({ default: module.CatCard })));
 
 function ScrollAnimation({ children, className = "" }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -36,46 +39,40 @@ function ScrollAnimation({ children, className = "" }) {
   );
 }
 
-function ContentCarousel({ cats }) {
-  const contentStyle = {
-    margin: 0,
-    width: "100%",
-    height: "500px",
-    color: "#fff",
-    lineHeight: "500px",
-    textAlign: "center",
-    background: "#1a1a2e",
-  };
+function ContentCarousel({ cats, isLoading }) {
+  if (isLoading) {
+    return (
+      <div className="carousel-skeleton">
+        <Skeleton.Node active style={{ width: "100%", height: 400 }} />
+      </div>
+    );
+  }
+
+  if (!cats || cats.length === 0) {
+    return (
+      <Card className="carousel-empty">
+        <Empty description="No cats available at the moment" />
+      </Card>
+    );
+  }
 
   return (
     <div>
       <Carousel fade autoplaySpeed={5000} autoplay>
-        {cats &&
-          cats.map((cat, index) => (
-            <div key={index}>
-              <img
-                style={contentStyle}
-                loading="eager"
-                draggable={false}
-                alt={cat.name || "cat"}
-                src={cat.url || null}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "20%",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  color: "#fff",
-                  fontSize: "1.5rem",
-                  fontWeight: "bold",
-                  textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
-                }}
-              >
-                {cat.name}
-              </div>
+        {cats.map((cat, index) => (
+          <div key={index} className="carousel-slide">
+            <img
+              loading="eager"
+              draggable={false}
+              alt={cat.name || "cat"}
+              src={cat.url || null}
+              className="carousel-image"
+            />
+            <div className="carousel-caption">
+              <h3>{cat.name}</h3>
             </div>
-          ))}
+          </div>
+        ))}
       </Carousel>
     </div>
   );
@@ -120,21 +117,9 @@ function StatsBar() {
 
 function HowItWorks() {
   const steps = [
-    {
-      icon: "🔍",
-      title: "Browse",
-      description: "Explore our lovely cats waiting for a forever home",
-    },
-    {
-      icon: "❤️",
-      title: "Choose",
-      description: "Donate or adopt the cat that touches your heart",
-    },
-    {
-      icon: "🏠",
-      title: "Impact",
-      description: "Make a difference in a cat's life today",
-    },
+    { icon: "🔍", title: "Browse", description: "Explore our lovely cats waiting for a forever home" },
+    { icon: "❤️", title: "Choose", description: "Donate or adopt the cat that touches your heart" },
+    { icon: "🏠", title: "Impact", description: "Make a difference in a cat's life today" },
   ];
 
   return (
@@ -143,7 +128,7 @@ function HowItWorks() {
         <h2 className="home-section-title">How It Works</h2>
         <div className="home-steps">
           {steps.map((step, index) => (
-            <div key={index} className="home-step animate-fade-in-up" style={{ animationDelay: `${index * 200}ms` }}>
+            <div key={index} className="home-step" style={{ animationDelay: `${index * 150}ms` }}>
               <div className="home-step-icon">{step.icon}</div>
               <h3 className="home-step-title">{step.title}</h3>
               <p className="home-step-desc">{step.description}</p>
@@ -155,10 +140,88 @@ function HowItWorks() {
   );
 }
 
+function FeaturedCats({ cats, isLoading, error }) {
+  if (error) {
+    return (
+      <Card className="error-card">
+        <Empty
+          image={Empty.PRESENTED_IMAGE_ERROR}
+          description="Failed to load cats. Please try again."
+        />
+      </Card>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <Row gutter={[24, 24]}>
+        {[1, 2, 3, 4].map((i) => (
+          <Col key={i} xs={24} sm={12} md={8} lg={6}>
+            <Card loading />
+          </Col>
+        ))}
+      </Row>
+    );
+  }
+
+  if (!cats || cats.length === 0) {
+    return (
+      <Card className="empty-card">
+        <Empty description="No cats available" />
+      </Card>
+    );
+  }
+
+  return (
+    <Suspense fallback={
+      <Row gutter={[24, 24]}>
+        {[1, 2, 3, 4].map((i) => (
+          <Col key={i} xs={24} sm={12} md={8} lg={6}>
+            <Card loading />
+          </Col>
+        ))}
+      </Row>
+    }>
+      <Row gutter={[24, 24]}>
+        {cats.slice(0, 8).map((cat, index) => (
+          <Col key={cat.id || index} xs={24} sm={12} md={8} lg={6}>
+            <CatCard cat={cat} />
+          </Col>
+        ))}
+      </Row>
+    </Suspense>
+  );
+}
+
+function Hero() {
+  return (
+    <div className="hero-gradient">
+      <div className="home-hero">
+        <h1 className="home-title">Welcome to SEM Cat Shelter</h1>
+        <p className="home-subtitle">
+          Find your new best friend or help us care for cats in need
+        </p>
+        <div className="hero-actions">
+          <Link to="/search">
+            <Button type="primary" size="large">
+              Browse Cats
+            </Button>
+          </Link>
+          <Link to="/auth" state={{ mode: "signup" }}>
+            <Button size="large" variant="filled">
+              Join Us
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Home() {
   const {
     data: catsHero = [],
-    isFetching
+    isFetching: isHeroLoading,
   } = useQuery({
     queryKey: ["catsHero"],
     queryFn: ({signal}) => getCatsHero(signal),
@@ -168,25 +231,20 @@ export function Home() {
   });
 
   return (
-    <div className="page">
+    <div className="page-home">
       <div className="container">
-        <div className="hero-gradient animate-fade-in-up">
-          <div className="home-hero">
-            <h1 className="home-title" style={{ color: "#fff" }}>
-              Welcome to SEM Cat Shelter
-            </h1>
-            <p className="home-subtitle" style={{ color: "rgba(255,255,255,0.9)" }}>
-              Find your new best friend or help us care for cats in need
-            </p>
-          </div>
-        </div>
-
+        <Hero />
         <StatsBar />
         <HowItWorks />
 
-        <div className="home-carousel mt-8">
-          <h2 className="home-section-title">Meet Our Cats</h2>
-          {isFetching ? <Skeleton active /> : <ContentCarousel cats={catsHero} />}
+        <div className="home-section">
+          <div className="home-section-header">
+            <h2 className="home-section-title">Meet Our Cats</h2>
+            <Link to="/search">
+              <Button type="link">View All →</Button>
+            </Link>
+          </div>
+          <FeaturedCats cats={catsHero} isLoading={isHeroLoading} />
         </div>
       </div>
     </div>
